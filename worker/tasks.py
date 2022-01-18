@@ -31,30 +31,37 @@ def question(question):
     return question
 
 
-result = {"yes": 0, "no": 0}
+
 @app.task()
-def voting(vote):
+def voting(vote, room_id):
     logger.info('Got Request [voting] - Starting work ')
-    time.sleep(3)
+    cnx = mysql.connector.connect(user='root', password='root',
+                                    host='db',
+                                    database='survey')
 
+    cursor = cnx.cursor()
     if vote == "y":
-        result["yes"] = result["yes"] + 1 
-    
-    else:
-        result["no"] = result["no"] + 1 
+        sql = "UPDATE voting SET yes = yes + 1 WHERE room_id = %s"
+        val = (room_id, )
+        cursor.execute(sql,val)
+        cnx.commit()
+        cursor.close()
 
-    print(result)
+    else:
+        sql = "UPDATE voting SET no = no + 1 WHERE room_id = %s"
+        val = (room_id, )
+        cursor.execute(sql,val)
+        cnx.commit()
+        cursor.close()
+
     logger.info('Work Finished ')
-    f = open("result.txt", "w")
-    f.write(result)
-    f.close()
     return result
 
 
 @app.task()
-def room(name=None, question=None):
+def room(name=None, question=None, result={"yes": 0, "no": 0}):
     logger.info('Got Request [create room] - Starting work ')
-    time.sleep(3) 
+    time.sleep(1) 
 
     room = {
         "name" : name,

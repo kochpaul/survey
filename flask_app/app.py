@@ -7,18 +7,18 @@ import time
 app = Flask(__name__)
 simple_app = Celery('simple_worker', broker='redis://redis:6379/0', backend='redis://redis:6379/0')
 
-@app.route('/simple_start_task')
-def call_method():
-    app.logger.info("Invoking Method ")
-    #    queue name in task folder.function name
-    r = simple_app.send_task('tasks.longtime_add', kwargs={'x': 1, 'y': 2})
-    app.logger.info(r.backend)
-    return r.id
+# @app.route('/simple_start_task')
+# def call_method():
+#     app.logger.info("Invoking Method ")
+#     #    queue name in task folder.function name
+#     r = simple_app.send_task('tasks.longtime_add', kwargs={'x': 1, 'y': 2})
+#     app.logger.info(r.backend)
+#     return r.id
 
-@app.route('/simple_task_result/<task_id>')
-def task_result(task_id):
-    result = simple_app.AsyncResult(task_id).result
-    return "Result of the Task " + str(result)
+# @app.route('/simple_task_result/<task_id>')
+# def task_result(task_id):
+#     result = simple_app.AsyncResult(task_id).result
+#     return "Result of the Task " + str(result)
 
 @app.route("/admin/createroom", methods=["POST", "GET"])
 def createroom():
@@ -32,9 +32,10 @@ def createroom():
             room_name = str(room_name_list[0])
             
             app.logger.info("Invoking Method ")
+            app.logger.info(room_name)
             room = simple_app.send_task('tasks.room', kwargs={"name": room_name})
             app.logger.info(room.backend)
-            time.sleep(4)
+            time.sleep(3)
             return redirect(url_for("adminroom", room_id=room.id))
             
     return render_template("admin/createroom.html")
@@ -57,25 +58,50 @@ def adminroom(room_id):
             value_request = request.form.values()
             question_list = list(value_request)
             question = str(question_list[0])
-        
+            #make task "room"
             app.logger.info("Invoking Method ")
             question_task = simple_app.send_task('tasks.room', kwargs={"name": room["name"] ,"question": question})
             app.logger.info(question_task.backend)
-            time.sleep(4)
+            time.sleep(3)
+
+            #push to db
+            cnx = mysql.connector.connect(user='root', password='root',
+                            host='db',
+                            database='survey')
+
+            cursor = cnx.cursor()
+
+            sql = "INSERT INTO voting (room_id, question, yes, no) VALUES (%s, %s, %s, %s)"
+            val = (question_task.id, question, 0, 0)
+            
+            cursor.execute(sql, val)
+            cnx.commit()            
+            cnx.close()
 
             return redirect(url_for("adminresults", room_id=question_task.id))
     return render_template("admin/question.html", room_id=room_id, room_name=room["name"])
 
 @app.route("/admin/results/room/<room_id>", methods=["POST", "GET"])
 def adminresults(room_id):
+    i = simple_app.control.inspect()
+    app.logger.info(i.scheduled())
+    app.logger.info(i.active())
+    app.logger.info(i.reserved())
+    
     room = simple_app.AsyncResult(room_id).result
-    try:
-        f = open("result.txt", "r")
-        result = f.read()
-        if result is None:
-            result = {"yes": 0, "no": 0}
-    except:
-        result = {"yes": 0, "no": 0}
+
+    cnx = mysql.connector.connect(user='root', password='root',
+                              host='db',
+                              database='survey')
+    cursor = cnx.cursor()
+
+    sql = "SELECT yes, no FROM voting WHERE room_id = %s"
+    val = (room_id, )
+    cursor.execute(sql, val)
+    
+    myresult = cursor.fetchone()
+    result = {"yes": myresult[0], "no": myresult[1]}
+
     return render_template("admin/result.html", room_name=room["name"], room_question=room["question"], result=result, room_id=room_id)
 
 
@@ -89,14 +115,14 @@ def room(room_id):
 
         if key_request == ['yes',]:            
             app.logger.info("Invoking Method ")
-            question_task = simple_app.send_task('tasks.voting', kwargs={"vote": "y"})
+            question_task = simple_app.send_task('tasks.voting', kwargs={"vote": "y", "room_id": room_id})
             app.logger.info(question_task.backend)
             time.sleep(4)
             return redirect(url_for("result", result_id=question_task.id))
 
         else:            
             app.logger.info("Invoking Method ")
-            question_task = simple_app.send_task('tasks.voting', kwargs={"vote": "n"})
+            question_task = simple_app.send_task('tasks.voting', kwargs={"vote": "n", "room_id": room_id})
             app.logger.info(question_task.backend)
             time.sleep(4)
             return redirect(url_for("result", result_id=question_task.id))
@@ -105,6 +131,18 @@ def room(room_id):
 
 @app.route("/user/results/<result_id>")
 def result(result_id):
-    result = simple_app.AsyncResult(result_id).result
-    return str(result)
+    room = simple_app.AsyncResult(result_id).result
+    cnx = mysql.connector.connect(user='root', password='root',
+                              host='db',
+                              database='survey')
+    cursor = cnx.cursor()
+
+    sql = "SELECT yes, no FROM voting WHERE room_id = %s"
+    val = (room_id, )
+    cursor.execute(sql, val)
+    
+    myresult = cursor.fetchone()
+    result = {"yes": myresult[0], "no": myresult[1]}
+    
+    return f"Results for room {room["name"]} with the question {room["question"]}: \n\n {result}"
 

@@ -17,8 +17,19 @@ services:
       - redis
       - flask_app
 
-
   redis:
     image: 'redis:4-alpine'
     ports:
       - '6379:6379'
+
+  db:
+    image: mysql:5.7.22
+    environment:
+      MYSQL_DATABASE: survey
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - .dbdata:/var/lib/mysql
+    ports:
+      - 33067:3306

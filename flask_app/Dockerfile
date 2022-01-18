@@ -10,10 +10,8 @@ WORKDIR /flask_app
 
 ENV FLASK_ENV=development
 
+
+CMD ["python", "./database.py"]
+
 CMD flask run --host=0.0.0.0
 
-#CMD gunicorn --workers $WORKERS \
-#  --threads $THREADS \
-#  --bind 0.0.0.0:$PORT_APP \
-#  --log-level DEBUG \
-#  app:app
