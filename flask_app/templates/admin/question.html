@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block head%}
+
+{% endblock %}
+
+{% block body %}
+<body>
+    <header>
+        <h1>Welcome in "{{ room_name }}"!</h1>
+    </header>
+    <div>
+        <h2>Please insert question:</h2>        
+        <form action="#" method="post">
+            <input type="text" name="question" required>
+            <button type="submit">start survey</button>
+        </form>
+    </div>
+    <div>
+        <p>Room-ID:</p>
+        <h2>{{ room_id }}</h2>
+    </div>
+</body>
+{% endblock %}

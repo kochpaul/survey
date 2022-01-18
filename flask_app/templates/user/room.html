@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block head%}
+
+{% endblock %}
+
+{% block body %}
+<body>
+    <div>
+        <h2>Welcome in room {{ room_name }}!</h2>        
+        <form action="#" method="post">
+            <p>{{ room_question }}</p>
+            <button type="submit" value="yes" name="yes">Yes!</button>
+            <button type="submit" value="no" name="no">No!</button>
+        </form>
+    </div>
+</body>
+{% endblock %}

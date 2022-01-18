@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block head%}
+
+{% endblock %}
+
+{% block body %}
+<body>
+    <header>
+        <h1>Result for room: "{{ room_name }}", with the question "{{room_question}}"!</h1>
+    </header>
+    <div>
+        <table>
+            <tr>
+              <th>Yes</th>
+              <th> {{ result.yes }} </th>
+            </tr>
+            <tr>
+              <td>No</td>
+              <td> {{ result.no }} </td>              
+            </tr>
+            <tr>
+              <td><button type="submit" value="again">ask again</button></td>
+              <td><button type="submit" value="next">next question</button></td>
+            </tr>
+          </table>
+    </div>
+    <div>
+        <p>Room-ID:</p>
+        <h2>{{ room_id }}</h2>
+    </div>
+</body>
+{% endblock %}
