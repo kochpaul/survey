@@ -45,15 +45,23 @@ def voting(vote, room_id):
         val = (room_id, )
         cursor.execute(sql,val)
         cnx.commit()
-        cursor.close()
+        
 
     else:
         sql = "UPDATE voting SET no = no + 1 WHERE room_id = %s"
         val = (room_id, )
         cursor.execute(sql,val)
         cnx.commit()
-        cursor.close()
-
+        
+    
+    sql = "SELECT yes, no FROM voting WHERE room_id = %s"
+    val = (room_id, )
+    cursor.execute(sql, val)
+    
+    myresult = cursor.fetchone()
+    result = {"yes": myresult[0], "no": myresult[1]}
+    cursor.close()
+    
     logger.info('Work Finished ')
     return result
 
