@@ -1,4 +1,1 @@
-Name: Paul Koch 
-Klasse: 13/3 
-Projektname: Survey - App 
-Libraries: flask, celery, mysql.connector, time
+A Web Application that is supposed to enable quick and simple surveys. You can enter survey “rooms” through an automatically generated QR-Code or a Code. Also, you can create admin accounts to draw up new “rooms”.
